@@ -105,9 +105,9 @@ export const RightPanel = () => {
             value={csvFilePath}
             onChange={(e) => setCsvFilePath(e.target.value)}
           >
-            <option value={"/ecg200.csv"}>ECG Dataset 1</option>
-            <option value={"/ecg300.csv"}>ECG Dataset 2</option>
-            <option value={"/ecg100.csv"}>ECG Dataset 3</option>
+            <option value={"ecg200.csv"}>ECG Dataset 1</option>
+            <option value={"ecg300.csv"}>ECG Dataset 2</option>
+            <option value={"ecg100.csv"}>ECG Dataset 3</option>
           </select>
 
           <label>Duration (seconds)           <p className={styles.rangeValue}>
