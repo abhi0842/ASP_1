@@ -43,8 +43,12 @@ export const SimulationProvider = ({ children }) => {
     emg: false,
   });
 
-  // ECG dataset selection (use relative paths so hosted base path works)
-  const [csvFilePath, setCsvFilePath] = useState("ecg200.csv");
+  // ECG dataset selection (use Vite base URL so hosted base path works)
+  const [csvFilePath, setCsvFilePath] = useState(() => {
+    const base = import.meta.env.BASE_URL || "/";
+    const normalizedBase = base.endsWith("/") ? base : base + "/";
+    return normalizedBase + "ecg200.csv";
+  });
   const prevPathRef = useRef(csvFilePath);
 
   // Instruction panel state / button ref used in Home.jsx

@@ -41,6 +41,9 @@ export const RightPanel = () => {
     }
     setApplypsdTrigger(true);
   };
+  const base = import.meta.env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : base + "/";
+  const assetPath = (name) => normalizedBase + name;
   const runFilter = () => {
     if (!generateECG) {
       Swal.fire({
@@ -101,13 +104,10 @@ export const RightPanel = () => {
         <div className={styles.box}>
           <h3>Signal Setup</h3>
           <label>Select ECG Dataset</label>
-          <select
-            value={csvFilePath}
-            onChange={(e) => setCsvFilePath(e.target.value)}
-          >
-            <option value={"ecg200.csv"}>ECG Dataset 1</option>
-            <option value={"ecg300.csv"}>ECG Dataset 2</option>
-            <option value={"ecg100.csv"}>ECG Dataset 3</option>
+          <select value={csvFilePath} onChange={(e) => setCsvFilePath(e.target.value)}>
+            <option value={assetPath("ecg200.csv")}>ECG Dataset 1</option>
+            <option value={assetPath("ecg300.csv")}>ECG Dataset 2</option>
+            <option value={assetPath("ecg100.csv")}>ECG Dataset 3</option>
           </select>
 
           <label>Duration (seconds)           <p className={styles.rangeValue}>
