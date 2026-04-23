@@ -23,17 +23,23 @@ export function calculateMSE(reference, filtered) {
  * - `reference` is treated as the desired signal d[n]
  * - output is y[n] = w^T xVec, which should approximate `reference`
  */
-export function filterSignalNLMS(noisy, reference, { filterOrder, stepSize, epsilon = 1e-8 }) {
-  if (!Array.isArray(noisy) || noisy.length === 0) return [];
-  if (!Array.isArray(reference) || reference.length === 0) return [];
+export function filterSignalNLMS(noisy, reference, options = {}) {
+  const { filterOrder, stepSize, epsilon = 1e-8, returnDiagnostics = false } = options;
+  if (!Array.isArray(noisy) || noisy.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
+  if (!Array.isArray(reference) || reference.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
 
   const N = Math.min(noisy.length, reference.length);
   const M = Math.max(1, Math.floor(filterOrder ?? 1));
-  const mu = clampNumber(stepSize ?? 0.1, 0, 10);
+  const mu = clampNumber(stepSize ?? 0.1, 0.01, 0.2);
   const eps = Math.max(1e-12, epsilon);
 
   const w = new Array(M).fill(0);
   const yFiltered = new Array(N).fill(0);
+
+  // diagnostics
+  const weightsHistory = returnDiagnostics ? [] : null;
+  const errorHistory = returnDiagnostics ? new Array(N).fill(0) : null;
+  const powerHistory = returnDiagnostics ? new Array(N).fill(0) : null;
 
   for (let n = 0; n < N; n++) {
     // xVec = [x[n], x[n-1], ..., x[n-M+1]]
@@ -54,9 +60,26 @@ export function filterSignalNLMS(noisy, reference, { filterOrder, stepSize, epsi
     const d = reference[n];
     const e = d - y;
 
+    if (returnDiagnostics) {
+      errorHistory[n] = e;
+      powerHistory[n] = power;
+      weightsHistory.push(w.slice());
+    }
+
     // w = w + (mu * e / power) * xVec
     const gain = (mu * e) / power;
     for (let k = 0; k < M; k++) w[k] += gain * xVec[k];
+  }
+
+  if (returnDiagnostics) {
+    return {
+      yFiltered,
+      diagnostics: {
+        weightsHistory,
+        errorHistory,
+        powerHistory,
+      },
+    };
   }
 
   return yFiltered;
@@ -70,9 +93,10 @@ export function filterSignalNLMS(noisy, reference, { filterOrder, stepSize, epsi
  * - `reference` is treated as the desired signal d[n]
  * - output is y[n] = w^T xVec, which should approximate `reference`
  */
-export function filterSignalRLS(noisy, reference, { filterOrder, forgettingFactor, regularization }) {
-  if (!Array.isArray(noisy) || noisy.length === 0) return [];
-  if (!Array.isArray(reference) || reference.length === 0) return [];
+export function filterSignalRLS(noisy, reference, options = {}) {
+  const { filterOrder, forgettingFactor, regularization, returnDiagnostics = false } = options;
+  if (!Array.isArray(noisy) || noisy.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
+  if (!Array.isArray(reference) || reference.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
 
   const N = Math.min(noisy.length, reference.length);
   const M = Math.max(1, Math.floor(filterOrder ?? 1));
@@ -88,6 +112,12 @@ export function filterSignalRLS(noisy, reference, { filterOrder, forgettingFacto
 
   const w = new Array(M).fill(0);
   const yFiltered = new Array(N).fill(0);
+
+  // diagnostics
+  const weightsHistory = returnDiagnostics ? [] : null;
+  const errorHistory = returnDiagnostics ? new Array(N).fill(0) : null;
+  const denomHistory = returnDiagnostics ? new Array(N).fill(0) : null;
+  const PTraceHistory = returnDiagnostics ? new Array(N).fill(0) : null;
 
   for (let n = 0; n < N; n++) {
     const xVec = new Array(M);
@@ -117,6 +147,16 @@ export function filterSignalRLS(noisy, reference, { filterOrder, forgettingFacto
     const d = reference[n];
     const e = d - y;
 
+    if (returnDiagnostics) {
+      errorHistory[n] = e;
+      denomHistory[n] = denom;
+      // trace of P
+      let trace = 0;
+      for (let i = 0; i < M; i++) trace += P[i][i];
+      PTraceHistory[n] = trace;
+      weightsHistory.push(w.slice());
+    }
+
     // gain vector k = z / denom
     const kVec = new Array(M);
     for (let i = 0; i < M; i++) kVec[i] = z[i] / denom;
@@ -131,6 +171,18 @@ export function filterSignalRLS(noisy, reference, { filterOrder, forgettingFacto
         P[i][j] = (P[i][j] - kVec[i] * z[j]) / lambda;
       }
     }
+  }
+
+  if (returnDiagnostics) {
+    return {
+      yFiltered,
+      diagnostics: {
+        weightsHistory,
+        errorHistory,
+        denomHistory,
+        PTraceHistory,
+      },
+    };
   }
 
   return yFiltered;

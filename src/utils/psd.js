@@ -1,7 +1,7 @@
 import Fili from "fili";
 
 export function computePSD(signal, fs) {
-  //console.log("signalLength", signal.length);
+  //console.log("signalLength", signal.length);n
   const N = 1 << Math.ceil(Math.log2(signal.length));
   //console.log("N", N);
   const fft = new Fili.Fft(N);

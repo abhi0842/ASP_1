@@ -199,13 +199,19 @@ export const RightPanel = () => {
 
           {adaptiveAlgo === "NLMS" && (
             <>
-              <label>Step size μ</label>
+              <label>Step size μ (0.01 to 0.2)</label>
               <input
-                type="number"
-                step="0.01"
-                value={stepSize}
-                onChange={(e) => setStepSize(Number(e.target.value))}
-              />
+  type="number"
+  min="0.01"
+  max="0.2"
+  step="0.01"
+  value={stepSize}
+  onChange={(e) =>
+    setStepSize(
+      Math.min(0.2, Math.max(0.01, Number(e.target.value)))
+    )
+  }
+/>
             </>
           )}
 
