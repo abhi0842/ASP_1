@@ -29,6 +29,7 @@ export const RightPanel = () => {
   const [stepSize, setStepSize] = useState(config.stepSize ?? 0.1);
   const [forgettingFactor, setForgettingFactor] = useState(config.forgettingFactor ?? 0.99);
   const [regularization, setRegularization] = useState(config.regularization ?? 0.01);
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
   const runPsd = () => {
     if (!generateECG) {
@@ -54,13 +55,24 @@ export const RightPanel = () => {
       return;
     }
 
+    const sanitizedOrder = clamp(Math.floor(Number(filterOrder) || 1), 1, 256);
+    const sanitizedMu = clamp(Number(stepSize) || 0.1, 0.01, 0.2);
+    const sanitizedLambda = clamp(Number(forgettingFactor) || 0.99, 0.9, 0.999999);
+    const sanitizedDelta = clamp(Number(regularization) || 0.01, 1e-12, 1);
+
+    // reflect sanitized values back into UI controls
+    setFilterOrder(sanitizedOrder);
+    setStepSize(Math.round(sanitizedMu * 100) / 100);
+    setForgettingFactor(Math.round(sanitizedLambda * 1e6) / 1e6);
+    setRegularization(Number(sanitizedDelta));
+
     const newConfig = {
       ...config,
       filterType: adaptiveAlgo,
-      filterOrder: Number(filterOrder),
-      stepSize: Number(stepSize),
-      forgettingFactor: Number(forgettingFactor),
-      regularization: Number(regularization),
+      filterOrder: sanitizedOrder,
+      stepSize: sanitizedMu,
+      forgettingFactor: sanitizedLambda,
+      regularization: sanitizedDelta,
     };
     setConfig(newConfig);
     setFilteredECG(true);
@@ -195,42 +207,55 @@ export const RightPanel = () => {
             step="1"
             value={filterOrder}
             onChange={(e) => setFilterOrder(Number(e.target.value))}
+            onBlur={() => setFilterOrder((o) => clamp(Math.floor(Number(o) || 1), 1, 256))}
           />
 
           {adaptiveAlgo === "NLMS" && (
             <>
               <label>Step size μ (0.01 to 0.2)</label>
               <input
-  type="number"
-  min="0.01"
-  max="0.2"
-  step="0.01"
-  value={stepSize}
-  onChange={(e) =>
-    setStepSize(
-      Math.min(0.2, Math.max(0.01, Number(e.target.value)))
-    )
-  }
-/>
+                type="number"
+                min="0.01"
+                max="0.2"
+                step="0.01"
+                value={stepSize}
+                onChange={(e) => setStepSize(Number(e.target.value))}
+                onBlur={() => setStepSize((s) => {
+                  const v = clamp(Number(s) || 0.01, 0.01, 0.2);
+                  return Math.round(v * 100) / 100;
+                })}
+              />
             </>
           )}
 
           {adaptiveAlgo === "RLS" && (
             <>
-              <label>Forgetting factor λ</label>
+              <label>Forgetting factor λ (0.90 to 0.999999)</label>
               <input
                 type="number"
-                step="0.001"
+                min="0.9"
+                max="0.999999"
+                step="0.0001"
                 value={forgettingFactor}
                 onChange={(e) => setForgettingFactor(Number(e.target.value))}
+                onBlur={() => setForgettingFactor((v) => {
+                  const out = clamp(Number(v) || 0.99, 0.9, 0.999999);
+                  return Math.round(out * 1e6) / 1e6;
+                })}
               />
 
-              <label>Regularization δ</label>
+              <label>Regularization δ (1e-12 to 1)</label>
               <input
                 type="number"
-                step="0.001"
+                min="1e-12"
+                max="1"
+                step="0.0001"
                 value={regularization}
                 onChange={(e) => setRegularization(Number(e.target.value))}
+                onBlur={() => setRegularization((v) => {
+                  const out = clamp(Number(v) || 0.01, 1e-12, 1);
+                  return Number(out);
+                })}
               />
             </>
           )}

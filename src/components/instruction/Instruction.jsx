@@ -34,12 +34,11 @@ export const Instruction = () => {
             <ul>
               <li>
                 <b>NLMS</b> — set <i>Filter Order (M)</i> and <i>Step Size (μ)</i>.
-                Typical μ: 0.01–0.2. Larger μ → faster convergence, risk
-                instability.
+                Allowed input ranges in the UI: <b>M</b> = 1–256 (recommended 16–64, default 32), <b>μ</b> = 0.01–0.2 (default 0.1). Larger μ → faster convergence but higher instability risk.
               </li>
               <li>
                 <b>RLS</b> — set <i>Filter Order (M)</i>, <i>Forgetting Factor (λ)</i>
-                and <i>Regularization (δ)</i>. Typical λ: 0.98–0.999, δ: 1e-4–1e-2.
+                and <i>Regularization (δ)</i>. Allowed ranges: <b>M</b> = 1–256 (recommended 16–64), <b>λ</b> = 0.90–0.999999 (default 0.99), <b>δ</b> = 1e-12–1 (default 0.01). For ECG use choose λ close to 1 (longer memory) and δ small to regularize P.
               </li>
             </ul>
           </p>

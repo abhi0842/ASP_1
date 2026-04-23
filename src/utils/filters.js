@@ -29,7 +29,7 @@ export function filterSignalNLMS(noisy, reference, options = {}) {
   if (!Array.isArray(reference) || reference.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
 
   const N = Math.min(noisy.length, reference.length);
-  const M = Math.max(1, Math.floor(filterOrder ?? 1));
+  const M = Math.max(1, Math.min(256, Math.floor(filterOrder ?? 1)));
   const mu = clampNumber(stepSize ?? 0.1, 0.01, 0.2);
   const eps = Math.max(1e-12, epsilon);
 
@@ -99,8 +99,9 @@ export function filterSignalRLS(noisy, reference, options = {}) {
   if (!Array.isArray(reference) || reference.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
 
   const N = Math.min(noisy.length, reference.length);
-  const M = Math.max(1, Math.floor(filterOrder ?? 1));
-  const lambda = clampNumber(forgettingFactor ?? 0.99, 0.01, 0.999999);
+  const M = Math.max(1, Math.min(256, Math.floor(filterOrder ?? 1)));
+  // For ECG use, restrict forgetting factor to reasonable memory range
+  const lambda = clampNumber(forgettingFactor ?? 0.99, 0.9, 0.999999);
   const delta = Math.max(1e-12, regularization ?? 0.01);
 
   // P initial covariance: (1/delta) * I
