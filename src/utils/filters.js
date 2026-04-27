@@ -16,7 +16,7 @@ export function calculateMSE(reference, filtered) {
 }
 
 /**
- * Normalized LMS adaptive FIR.
+ * Normalized LMS(NLMS) adaptive FIR.
  *
  * In this app:
  * - `noisy` is treated as the filter input x[n]
@@ -182,6 +182,66 @@ export function filterSignalRLS(noisy, reference, options = {}) {
         errorHistory,
         denomHistory,
         PTraceHistory,
+      },
+    };
+  }
+
+  return yFiltered;
+}
+
+/**
+ * Standard LMS adaptive FIR (supervised learning form).
+ *
+ * In this app:
+ * - `noisy` is treated as the filter input x[n]
+ * - `reference` is treated as the desired signal d[n]
+ * - output is y[n] = w^T xVec, which should approximate `reference`
+ */
+export function filterSignalLMS(noisy, reference, options = {}) {
+  const { filterOrder, stepSize, returnDiagnostics = false } = options;
+  if (!Array.isArray(noisy) || noisy.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
+  if (!Array.isArray(reference) || reference.length === 0) return returnDiagnostics ? { yFiltered: [], diagnostics: {} } : [];
+
+  const N = Math.min(noisy.length, reference.length);
+  const M = Math.max(1, Math.min(256, Math.floor(filterOrder ?? 1)));
+  const mu = clampNumber(stepSize ?? 0.01, 1e-8, 1);
+
+  const w = new Array(M).fill(0);
+  const yFiltered = new Array(N).fill(0);
+
+  const weightsHistory = returnDiagnostics ? [] : null;
+  const errorHistory = returnDiagnostics ? new Array(N).fill(0) : null;
+
+  for (let n = 0; n < N; n++) {
+    const xVec = new Array(M);
+    for (let k = 0; k < M; k++) {
+      const idx = n - k;
+      xVec[k] = idx >= 0 ? noisy[idx] : 0;
+    }
+
+    let y = 0;
+    for (let k = 0; k < M; k++) y += w[k] * xVec[k];
+    yFiltered[n] = y;
+
+    const d = reference[n];
+    const e = d - y;
+
+    if (returnDiagnostics) {
+      errorHistory[n] = e;
+      weightsHistory.push(w.slice());
+    }
+
+    // standard LMS update: w = w + mu * e * xVec
+    const gain = mu * e;
+    for (let k = 0; k < M; k++) w[k] += gain * xVec[k];
+  }
+
+  if (returnDiagnostics) {
+    return {
+      yFiltered,
+      diagnostics: {
+        weightsHistory,
+        errorHistory,
       },
     };
   }

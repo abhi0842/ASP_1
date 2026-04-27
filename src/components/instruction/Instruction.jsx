@@ -37,6 +37,9 @@ export const Instruction = () => {
                 Allowed input ranges in the UI: <b>M</b> = 1–256 (recommended 16–64, default 32), <b>μ</b> = 0.01–0.2 (default 0.1). Larger μ → faster convergence but higher instability risk.
               </li>
               <li>
+                <b>LMS</b> — simple Least-Mean-Squares adaptive FIR. Set <i>Filter Order (M)</i> and <i>Step Size (μ)</i>. Use smaller μ values for stability (LMS typically converges slower than NLMS). Allowed ranges: <b>M</b> = 1–256, <b>μ</b> small (UI allows very small values).
+              </li>
+              <li>
                 <b>RLS</b> — set <i>Filter Order (M)</i>, <i>Forgetting Factor (λ)</i>
                 and <i>Regularization (δ)</i>. Allowed ranges: <b>M</b> = 1–256 (recommended 16–64), <b>λ</b> = 0.90–0.999999 (default 0.99), <b>δ</b> = 1e-12–1 (default 0.01). For ECG use choose λ close to 1 (longer memory) and δ small to regularize P.
               </li>
