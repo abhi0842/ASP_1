@@ -56,13 +56,17 @@ export const RightPanel = () => {
     }
 
     const sanitizedOrder = clamp(Math.floor(Number(filterOrder) || 1), 1, 256);
-    const sanitizedMu = clamp(Number(stepSize) || 0.1, 0.01, 0.2);
+     // sanitize step size depending on algorithm (LMS can accept much smaller mu)
+    const sanitizedMu = adaptiveAlgo === "LMS"
+      ? clamp(Number(stepSize) || 0.01, 1e-8, 1)
+      : clamp(Number(stepSize) || 0.1, 0.01, 0.2);
     const sanitizedLambda = clamp(Number(forgettingFactor) || 0.99, 0.9, 0.999999);
     const sanitizedDelta = clamp(Number(regularization) || 0.01, 1e-12, 1);
 
     // reflect sanitized values back into UI controls
     setFilterOrder(sanitizedOrder);
-    setStepSize(Math.round(sanitizedMu * 100) / 100);
+     if (adaptiveAlgo === "LMS") setStepSize(sanitizedMu);
+    else setStepSize(Math.round(sanitizedMu * 100) / 100);
     setForgettingFactor(Math.round(sanitizedLambda * 1e6) / 1e6);
     setRegularization(Number(sanitizedDelta));
 
@@ -191,11 +195,12 @@ export const RightPanel = () => {
         </div>
         {/* adaptive filter input */}
         <div className={styles.box}>
-          <h3>Adaptive Filter (NLMS / RLS)</h3>
+          <h3>Adaptive Filter (NLMS / LMS/ RLS)</h3>
 
           <label>Algorithm</label>
           <select value={adaptiveAlgo} onChange={(e) => setAdaptiveAlgo(e.target.value)}>
             <option value="NLMS">NLMS</option>
+            <option value="LMS">LMS</option>
             <option value="RLS">RLS</option>
           </select>
 
@@ -210,18 +215,23 @@ export const RightPanel = () => {
             onBlur={() => setFilterOrder((o) => clamp(Math.floor(Number(o) || 1), 1, 256))}
           />
 
-          {adaptiveAlgo === "NLMS" && (
+           {(adaptiveAlgo === "NLMS" || adaptiveAlgo === "LMS") && (
             <>
-              <label>Step size μ (0.01 to 0.2)</label>
+               <label>Step size μ {adaptiveAlgo === "LMS" ? "(LMS — small values recommended)" : "(0.01 to 0.2)"}</label>
               <input
                 type="number"
-                min="0.01"
-                max="0.2"
-                step="0.01"
+                min={adaptiveAlgo === "LMS" ? "1e-8" : "0.01"}
+                max={adaptiveAlgo === "LMS" ? "1" : "0.2"}
+                step={adaptiveAlgo === "LMS" ? "0.0001" : "0.01"}
                 value={stepSize}
                 onChange={(e) => setStepSize(Number(e.target.value))}
                 onBlur={() => setStepSize((s) => {
-                  const v = clamp(Number(s) || 0.01, 0.01, 0.2);
+                  const raw = Number(s);
+                  if (adaptiveAlgo === "LMS") {
+                    const v = clamp(raw || 0.01, 1e-8, 1);
+                    return v;
+                  }
+                  const v = clamp(raw || 0.01, 0.01, 0.2);
                   return Math.round(v * 100) / 100;
                 })}
               />

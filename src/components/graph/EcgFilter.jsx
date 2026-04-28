@@ -2,7 +2,7 @@ import { useMemo, useContext, useEffect } from "react";
 import { SimulationContext } from "../../context/SimulationContext";
 import styles from "./ecgFilter.module.css";
 import { Line } from "react-chartjs-2";
-import { filterSignalNLMS, filterSignalRLS, calculateMSE } from "../../utils/filters";
+import { filterSignalNLMS,filterSignalLMS, filterSignalRLS, calculateMSE } from "../../utils/filters";
 import {
   Chart as ChartJS,
   LineElement,
@@ -57,7 +57,13 @@ export const EcgFilter = () => {
         filterOrder: config.filterOrder,
         stepSize: config.stepSize,
       });
-    } else {
+    
+    } else if (config.filterType === "LMS") {
+      yFiltered = filterSignalLMS(noisy, reference, {
+        filterOrder: config.filterOrder,
+        stepSize: config.stepSize,
+      }) ;}
+      else {
       yFiltered = filterSignalRLS(noisy, reference, {
         filterOrder: config.filterOrder,
         forgettingFactor: config.forgettingFactor,
@@ -105,8 +111,10 @@ export const EcgFilter = () => {
       <h3>
         ECG Signal (Filtered) <span>Algorithm: </span>
         <span>
-          {config.filterType === "NLMS"
+             {config.filterType === "NLMS"
             ? `NLMS — μ=${config.stepSize} — M=${config.filterOrder}`
+            : config.filterType === "LMS"
+            ? `LMS — μ=${config.stepSize} — M=${config.filterOrder}`
             : `RLS — λ=${config.forgettingFactor} — M=${config.filterOrder}`}
         </span>
       </h3>
