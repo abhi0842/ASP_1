@@ -10,6 +10,11 @@ export function addPowerlineNoise(signal, fs, amplitude = 0.05, freq = 50) {
   );
 }
 
+function guassionRandom() {
+  const u1 = Math.random();
+  const u2 = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+}
 export function addMuscleNoise(signal, amplitude = 0.02) {
-  return signal.map(v => v + amplitude * (Math.random() * 2 - 1));
+  return signal.map(v => v + amplitude * guassionRandom());
 }

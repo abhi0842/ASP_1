@@ -21,9 +21,9 @@ export const EcgFilteredPSD = () => {
   const chartData = {
     datasets: [
       {
-        label: "Unfiltered ECG PSD",
+        label: "Filtered ECG PSD",
         data: psdData.psd.map((p, i) => ({ x: psdData.freqs[i], y: p })),
-        borderColor: "blue",
+        borderColor: "green",
         borderWidth: 1,
         pointRadius: 0,
         tension: 0,
@@ -61,10 +61,9 @@ export const EcgFilteredPSD = () => {
       },
       y: {
         min:0,
-        max:2,
         title: {
           display: true,
-          text: "PSD(dB/Hz) x 10^3",
+          text: "PSD (V²/Hz)",
           font: {
             size: 13,
             weight: "bold",
