@@ -178,6 +178,14 @@ export function filterSignalRLS(noisy, reference, options = {}) {
         P[i][j] = (P[i][j] - kVec[i] * z[j]) / lambda;
       }
     }
+    // Symmetrize P to prevent numerical issues
+    for (let i = 0; i < M; i++) {
+      for (let j = i + 1; j < M; j++) {
+        const avg = (P[i][j] + P[j][i]) / 2;
+        P[i][j] = avg;
+        P[j][i] = avg;
+      }
+    }
   }
 
   if (returnDiagnostics) {
