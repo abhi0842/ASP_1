@@ -30,15 +30,19 @@ export function filterSignalNLMS(noisy, reference, options = {}) {
 
   const N = Math.min(noisy.length, reference.length);
   const M = Math.max(1, Math.min(256, Math.floor(filterOrder ?? 1)));
-  const mu = clampNumber(stepSize ?? 0.1, 0.01, 0.2);
+  
+  // Calculate signal power to determine stable step size bound
+  const p_u = noisy.reduce((acc, v) => acc + v * v, 0) / noisy.length;
+  const muMax = 1 / (M * p_u + 1e-8);
+  const mu = clampNumber(stepSize ?? 0.1, 0.01, Math.min(0.2, muMax * 0.9));
   const eps = Math.max(1e-12, epsilon);
 
   const w = new Array(M).fill(0);
-  const yFiltered = new Array(N).fill(0);
+  const yFiltered = new Array(N).fill(0); // This will store the cleaned signal (e[n])
+  const yNoise = returnDiagnostics ? new Array(N).fill(0) : null; // This will store the estimated noise (y[n])
 
   // diagnostics
   const weightsHistory = returnDiagnostics ? [] : null;
-  const errorHistory = returnDiagnostics ? new Array(N).fill(0) : null;
   const powerHistory = returnDiagnostics ? new Array(N).fill(0) : null;
 
   for (let n = 0; n < N; n++) {
@@ -52,16 +56,17 @@ export function filterSignalNLMS(noisy, reference, options = {}) {
       power += v * v;
     }
 
-    // y[n] = w^T xVec
+    // y[n] = w^T xVec (Estimated Noise)
     let y = 0;
     for (let k = 0; k < M; k++) y += w[k] * xVec[k];
-    yFiltered[n] = y;
 
-    const d = reference[n];
-    const e = d - y;
+    const d = reference[n]; // Noisy Signal
+    const e = d - y; // Cleaned Signal (Error)
+
+    yFiltered[n] = e;
 
     if (returnDiagnostics) {
-      errorHistory[n] = e;
+      yNoise[n] = y;
       powerHistory[n] = power;
       weightsHistory.push(w.slice());
     }
@@ -73,10 +78,10 @@ export function filterSignalNLMS(noisy, reference, options = {}) {
 
   if (returnDiagnostics) {
     return {
-      yFiltered,
+      Yfiltered: yFiltered,
+      yNoise: yNoise,
       diagnostics: {
         weightsHistory,
-        errorHistory,
         powerHistory,
       },
     };
@@ -112,11 +117,11 @@ export function filterSignalRLS(noisy, reference, options = {}) {
   }
 
   const w = new Array(M).fill(0);
-  const yFiltered = new Array(N).fill(0);
+  const yFiltered = new Array(N).fill(0); // This will store the cleaned signal (e[n])
+  const yNoise = returnDiagnostics ? new Array(N).fill(0) : null; // This will store the estimated noise (y[n])
 
   // diagnostics
   const weightsHistory = returnDiagnostics ? [] : null;
-  const errorHistory = returnDiagnostics ? new Array(N).fill(0) : null;
   const denomHistory = returnDiagnostics ? new Array(N).fill(0) : null;
   const PTraceHistory = returnDiagnostics ? new Array(N).fill(0) : null;
 
@@ -140,16 +145,17 @@ export function filterSignalRLS(noisy, reference, options = {}) {
     for (let k = 0; k < M; k++) xTz += xVec[k] * z[k];
     const denom = lambda + xTz;
 
-    // y = w^T xVec
+    // y = w^T xVec (Estimated Noise)
     let y = 0;
     for (let k = 0; k < M; k++) y += w[k] * xVec[k];
-    yFiltered[n] = y;
 
-    const d = reference[n];
-    const e = d - y;
+    const d = reference[n]; // Noisy Signal
+    const e = d - y; // Cleaned Signal (Error)
+
+    yFiltered[n] = e;
 
     if (returnDiagnostics) {
-      errorHistory[n] = e;
+      yNoise[n] = y;
       denomHistory[n] = denom;
       // trace of P
       let trace = 0;
@@ -176,10 +182,10 @@ export function filterSignalRLS(noisy, reference, options = {}) {
 
   if (returnDiagnostics) {
     return {
-      yFiltered,
+      Yfiltered: yFiltered,
+      yNoise: yNoise,
       diagnostics: {
         weightsHistory,
-        errorHistory,
         denomHistory,
         PTraceHistory,
       },
@@ -195,13 +201,17 @@ export function filterSignalLMS(noisy, reference, options = {}) {
 
   const N = Math.min(noisy.length, reference.length);
   const M = Math.max(1, Math.min(256, Math.floor(filterOrder ?? 1)));
-  const mu = clampNumber(stepSize ?? 0.01, 1e-8, 1);
+  
+  // Calculate signal power to determine stable step size bound
+  const p_u = noisy.reduce((acc, v) => acc + v * v, 0) / noisy.length;
+  const muMax = 1 / (M * p_u + 1e-8);
+  const mu = clampNumber(stepSize ?? 0.01, 1e-8, muMax * 0.9);
 
   const w = new Array(M).fill(0);
-  const yFiltered = new Array(N).fill(0);
+  const yFiltered = new Array(N).fill(0); // This will store the cleaned signal (e[n])
+  const yNoise = returnDiagnostics ? new Array(N).fill(0) : null; // This will store the estimated noise (y[n])
 
   const weightsHistory = returnDiagnostics ? [] : null;
-  const errorHistory = returnDiagnostics ? new Array(N).fill(0) : null;
 
   for (let n = 0; n < N; n++) {
     const xVec = new Array(M);
@@ -210,15 +220,17 @@ export function filterSignalLMS(noisy, reference, options = {}) {
       xVec[k] = idx >= 0 ? noisy[idx] : 0;
     }
 
+    // y[n] = w^T xVec (Estimated Noise)
     let y = 0;
     for (let k = 0; k < M; k++) y += w[k] * xVec[k];
-    yFiltered[n] = y;
 
-    const d = reference[n];
-    const e = d - y;
+    const d = reference[n]; // Noisy Signal
+    const e = d - y; // Cleaned Signal (Error)
+
+    yFiltered[n] = e;
 
     if (returnDiagnostics) {
-      errorHistory[n] = e;
+      yNoise[n] = y;
       weightsHistory.push(w.slice());
     }
 
@@ -229,10 +241,13 @@ export function filterSignalLMS(noisy, reference, options = {}) {
 
   if (returnDiagnostics) {
     return {
-      yFiltered,
+      Yfiltered: yFiltered,
+      yNoise: yNoise,
       diagnostics: {
         weightsHistory,
-        errorHistory,
+        signalPower: p_u,
+        muMax: muMax,
+        muUsed: mu,
       },
     };
   }

@@ -48,33 +48,40 @@ export const EcgFilter = () => {
 
     const fsOriginal = inferFs(inputSamples);
     const display = resampleForDisplay(inputSamples, fsOriginal, originalFs);
-    const noisy = display.map((p) => p.y);
-    const reference = cleanSignal.slice(0, noisy.length);
+    const noisyECG = display.map((p) => p.y);
+    const cleanGroundTruth = cleanSignal.slice(0, noisyECG.length);
+    
+    // In Adaptive Noise Cancellation (ANC):
+    // - d[n] (desired) is the noisy signal
+    // - x[n] (input) is a noise reference
+    // - y[n] is the filter output (estimated noise)
+    // - e[n] = d[n] - y[n] is the cleaned signal
+    const noiseReference = noisyECG.map((v, i) => v - (cleanGroundTruth[i] || 0));
 
-    let yFiltered = [];
+    let cleanedSignal = [];
     if (config.filterType === "NLMS") {
-      yFiltered = filterSignalNLMS(noisy, reference, {
+      cleanedSignal = filterSignalNLMS(noiseReference, noisyECG, {
         filterOrder: config.filterOrder,
         stepSize: config.stepSize,
       });
     
     } else if (config.filterType === "LMS") {
-      yFiltered = filterSignalLMS(noisy, reference, {
+      cleanedSignal = filterSignalLMS(noiseReference, noisyECG, {
         filterOrder: config.filterOrder,
         stepSize: config.stepSize,
       }) ;}
       else {
-      yFiltered = filterSignalRLS(noisy, reference, {
+      cleanedSignal = filterSignalRLS(noiseReference, noisyECG, {
         filterOrder: config.filterOrder,
         forgettingFactor: config.forgettingFactor,
         regularization: config.regularization,
       });
     }
 
-    const mse = calculateMSE(reference, yFiltered);
+    const mse = calculateMSE(cleanGroundTruth, cleanedSignal);
     setMetrics({ algorithm: config.filterType, order: config.filterOrder, mse: mse.toFixed(6) });
 
-    const mapped = display.map((p, i) => ({ x: p.x, y: yFiltered[i] ?? 0 }));
+    const mapped = display.map((p, i) => ({ x: p.x, y: cleanedSignal[i] ?? 0 }));
     return mapped.filter((p) => p.x <= time);
   }, [time, originalFs, config, cleanSignal, rawSamples, noisySamples, setMetrics]);
 
