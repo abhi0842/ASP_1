@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import { guideSteps } from "../guideSteps";
 
 export const SimulationContext = createContext();
 
@@ -54,6 +55,30 @@ export const SimulationProvider = ({ children }) => {
   // Instruction panel state / button ref used in Home.jsx
   const [showInstruction, setShowInstruction] = useState(false);
   const buttonRef = useRef(null);
+  const instructionPanelRef = useRef(null);
+
+  const [screen] = useState("simulation");
+
+  // --- Guided Tutor state ---
+  const [guideActive, setGuideActive] = useState(false);
+  const [step, setStep] = useState(0);
+  const [actions, setActions] = useState({});
+
+  const markAction = (action) => {
+    setActions((prev) => ({ ...prev, [action]: true }));
+  };
+
+  const resetGuideActions = () => setActions({});
+
+  const steps = guideSteps;
+  const currentStep = steps[step];
+  const canProceed = !currentStep?.requiredAction || actions[currentStep.requiredAction];
+
+  useEffect(() => {
+    if (currentStep?.requiredAction && actions[currentStep.requiredAction]) {
+      setStep((prev) => Math.min(steps.length - 1, prev + 1));
+    }
+  }, [actions, currentStep, steps.length]);
 
   const parseCsvECG = useCallback((text) => {
     const lines = text
@@ -188,6 +213,19 @@ export const SimulationProvider = ({ children }) => {
         showInstruction,
         setShowInstruction,
         buttonRef,
+        instructionPanelRef,
+        screen,
+
+        // Guided Tutor
+        guideActive,
+        setGuideActive,
+        step,
+        setStep,
+        steps,
+        actions,
+        markAction,
+        resetGuideActions,
+        canProceed,
       }}
     >
       {children}

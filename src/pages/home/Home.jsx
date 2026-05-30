@@ -5,20 +5,19 @@ import { Instruction } from "../../components/instruction/Instruction.jsx";
 import { SimulationContext } from "../../context/SimulationContext.jsx";
 import { LeftPanel } from "../../components/leftPanel/LeftPanel.jsx";
 import { RightPanel } from "../../components/rightPanel/RightPanel.jsx";
+import { GuidedModal } from "../../components/guidedModal/GuidedModal.jsx";
 
 export const Home = () => {
-  const { showInstruction, setShowInstruction, buttonRef } =
+  const { showInstruction, setShowInstruction, buttonRef, instructionPanelRef } =
     useContext(SimulationContext);
   const instructionRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        instructionRef.current &&
-        !instructionRef.current.contains(event.target)
-      ) {
+      const panel = instructionPanelRef.current || instructionRef.current;
+      if (panel && !panel.contains(event.target)) {
         if (buttonRef.current && !buttonRef.current.contains(event.target)) {
-          setShowInstruction(false); // close the panel
+          setShowInstruction(false);
         }
       }
     };
@@ -29,7 +28,7 @@ export const Home = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showInstruction, setShowInstruction, buttonRef]);
+  }, [showInstruction, setShowInstruction, buttonRef, instructionPanelRef]);
 
   return (
     <div className={styles.grandContainer}>
@@ -40,7 +39,14 @@ export const Home = () => {
         {/* Middle Container:- simulation area */}
         <div className={styles.middleContainer}>
           {showInstruction && (
-            <div ref={instructionRef} className={styles.instructionContainer}>
+            <div
+              id="instructionPanel"
+              ref={(el) => {
+                instructionRef.current = el;
+                if (instructionPanelRef) instructionPanelRef.current = el;
+              }}
+              className={styles.instructionContainer}
+            >
               <Instruction />
             </div>
           )}
@@ -50,6 +56,7 @@ export const Home = () => {
         <div className={styles.footerContainer}>
           ©Copyright 2025 Virtual Labs, IIT Roorkee
         </div>
+        <GuidedModal />
       </div>
     </div>
   );
