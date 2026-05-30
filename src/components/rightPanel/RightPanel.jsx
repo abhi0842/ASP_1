@@ -20,8 +20,10 @@ export const RightPanel = () => {
     prevPathRef,
     setCsvFilePath,
     generateECG,
+    filteredECG,
     setApplypsdTrigger,
     setFilteredSamples,
+    markAction,
   } = useContext(SimulationContext);
 
   const [adaptiveAlgo, setAdaptiveAlgo] = useState(config.filterType ?? "NLMS");
@@ -40,7 +42,16 @@ export const RightPanel = () => {
       });
       return;
     }
+    if (!filteredECG) {
+      Swal.fire({
+        icon: "info",
+        title: "Oops...",
+        text: "Please apply the adaptive filter before computing PSD.",
+      });
+      return;
+    }
     setApplypsdTrigger(true);
+    markAction("COMPUTE_PSD");
   };
   const base = import.meta.env.BASE_URL || "/";
   const normalizedBase = base.endsWith("/") ? base : base + "/";
@@ -80,6 +91,7 @@ export const RightPanel = () => {
     };
     setConfig(newConfig);
     setFilteredECG(true);
+    markAction("APPLY_FILTER");
   };
   const noiseTrigger = () => {
     //console.log(noise);
@@ -100,6 +112,7 @@ export const RightPanel = () => {
       return;
     } else {
       setApplyNoiseTrigger(true);
+      markAction("ADD_NOISE");
     }
   };
   useEffect(() => {
@@ -117,7 +130,7 @@ export const RightPanel = () => {
       <div className={styles.right}>
         <h2>ECG Signal & Filter Controls</h2>
 
-        <div className={styles.box}>
+        <div id="signalSetup" className={styles.box}>
           <h3>Signal Setup</h3>
           <label>Select ECG Dataset</label>
           <select value={csvFilePath} onChange={(e) => setCsvFilePath(e.target.value)}>
@@ -151,12 +164,19 @@ export const RightPanel = () => {
             
           </p>
 
-          <button onClick={() => setGenerateECG(true)}>
+          <button
+            type="button"
+            id="generateButton"
+            onClick={() => {
+              setGenerateECG(true);
+              markAction("GENERATE_SIGNAL");
+            }}
+          >
             Generate ECG Signal
           </button>
         </div>
 
-        <div className={styles.box}>
+        <div id="noisePanel" className={styles.box}>
           <h3>Add Noise</h3>
 
           <label>
@@ -193,12 +213,15 @@ export const RightPanel = () => {
             <button onClick={() => noiseTrigger()}>Add Noise to Signal</button>
           </div>
         </div>
-        {/* adaptive filter input */}
-        <div className={styles.box}>
+        <div id="algoSetup" className={styles.box}>
           <h3>Adaptive Filter (NLMS / LMS/ RLS)</h3>
 
           <label>Algorithm</label>
-          <select value={adaptiveAlgo} onChange={(e) => setAdaptiveAlgo(e.target.value)}>
+          <select
+            id="algorithmSelector"
+            value={adaptiveAlgo}
+            onChange={(e) => setAdaptiveAlgo(e.target.value)}
+          >
             <option value="NLMS">NLMS</option>
             <option value="LMS">LMS</option>
             <option value="RLS">RLS</option>
@@ -270,9 +293,13 @@ export const RightPanel = () => {
             </>
           )}
 
-          <div className={styles.psdContainer}>
-            <button onClick={runFilter}>Apply Filter</button>
-            <button onClick={runPsd}>Compute PSD</button>
+          <div id="algoRunActions" className={styles.psdContainer}>
+            <button type="button" id="applyFilterBtn" onClick={runFilter}>
+              Apply Filter
+            </button>
+            <button type="button" id="computePsdBtn" onClick={runPsd}>
+              Compute PSD
+            </button>
           </div>
         </div>
       </div>
