@@ -113,19 +113,19 @@ export const EcgFilter = () => {
     },
   };
 
-  return (
-    <div className={styles.signalContainer}>
-      <h3>
-        ECG Signal (Filtered) <span>Algorithm: </span>
-        <span>
-             {config.filterType === "NLMS"
-            ? `NLMS — μ=${config.stepSize} — M=${config.filterOrder}`
-            : config.filterType === "LMS"
-            ? `LMS — μ=${config.stepSize} — M=${config.filterOrder}`
-            : `RLS — λ=${config.forgettingFactor} — M=${config.filterOrder}`}
-        </span>
-      </h3>
-      <Line data={chartData} options={options} />
-    </div>
-  );
+ return (
+  <div className={styles.signalContainer}>
+    <h3>
+      ECG Signal (Filtered) <span>Algorithm: </span>
+      <span>
+        {config.filterType === "LMS"
+          ? `LMS — μ=${config.stepSize} — M=${config.filterOrder}`
+          : config.filterType === "RLS"
+          ? `RLS — λ=${config.forgettingFactor} — M=${config.filterOrder}`
+          : `NLMS — μ=${config.stepSize} — M=${config.filterOrder}`}
+      </span>
+    </h3>
+    <Line data={chartData} options={options} />
+  </div>
+);
 };

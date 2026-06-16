@@ -18,15 +18,15 @@ export const SimulationProvider = ({ children }) => {
  
   // Adaptive filter params
   const [config, setConfig] = useState({
-    filterType: "NLMS", // "NLMS" or "RLS"
+    filterType: "LMS", // "LMS" or "RLS"
     filterOrder: 32, // M
-    stepSize: 0.1, // mu
+    stepSize: 0.01, // mu
     forgettingFactor: 0.99, // lambda
     regularization: 0.01, // delta
   });
 
   const [metrics, setMetrics] = useState({
-    algorithm: "NLMS",
+    algorithm: "LMS",
     order: 32,
     mse: "0.000000",
   });
@@ -156,7 +156,7 @@ export const SimulationProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  }, [csvFilePath, parseCsvECG, config.filterType, config.filterOrder]);
+  }, [csvFilePath, parseCsvECG,]);
 
   useEffect(() => {
     if (!generateECG) return;

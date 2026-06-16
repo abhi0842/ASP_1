@@ -26,9 +26,9 @@ export const RightPanel = () => {
     markAction,
   } = useContext(SimulationContext);
 
-  const [adaptiveAlgo, setAdaptiveAlgo] = useState(config.filterType ?? "NLMS");
+  const [adaptiveAlgo, setAdaptiveAlgo] = useState(config.filterType ?? "LMS");
   const [filterOrder, setFilterOrder] = useState(config.filterOrder ?? 32);
-  const [stepSize, setStepSize] = useState(config.stepSize ?? 0.1);
+  const [stepSize, setStepSize] = useState(config.stepSize ?? 0.01);
   const [forgettingFactor, setForgettingFactor] = useState(config.forgettingFactor ?? 0.99);
   const [regularization, setRegularization] = useState(config.regularization ?? 0.01);
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
@@ -69,7 +69,7 @@ export const RightPanel = () => {
     const sanitizedOrder = clamp(Math.floor(Number(filterOrder) || 1), 1, 256);
      // sanitize step size depending on algorithm (LMS can accept much smaller mu)
     const sanitizedMu = adaptiveAlgo === "LMS"
-      ? clamp(Number(stepSize) || 0.01, 1e-8, 1)
+      ? clamp(Number(stepSize) || 0.01, 1e-8, 0.1)
       : clamp(Number(stepSize) || 0.1, 0.01, 0.2);
     const sanitizedLambda = clamp(Number(forgettingFactor) || 0.99, 0.9, 0.999999);
     const sanitizedDelta = clamp(Number(regularization) || 0.01, 1e-12, 1);
@@ -93,6 +93,7 @@ export const RightPanel = () => {
     setFilteredECG(true);
     markAction("APPLY_FILTER");
   };
+  
   const noiseTrigger = () => {
     //console.log(noise);
     if (!generateECG) {
@@ -214,7 +215,7 @@ export const RightPanel = () => {
           </div>
         </div>
         <div id="algoSetup" className={styles.box}>
-          <h3>Adaptive Filter (NLMS / LMS/ RLS)</h3>
+          <h3>Adaptive Filter ( LMS/ RLS/ NLMS)</h3>
 
           <label>Algorithm</label>
           <select
@@ -222,9 +223,10 @@ export const RightPanel = () => {
             value={adaptiveAlgo}
             onChange={(e) => setAdaptiveAlgo(e.target.value)}
           >
-            <option value="NLMS">NLMS</option>
+            
             <option value="LMS">LMS</option>
             <option value="RLS">RLS</option>
+            <option value="NLMS">NLMS</option>
           </select>
 
           <label>Filter Order (M)</label>
@@ -243,15 +245,15 @@ export const RightPanel = () => {
                <label>Step size μ {adaptiveAlgo === "LMS" ? "(LMS — small values recommended)" : "(0.01 to 0.2)"}</label>
               <input
                 type="number"
-                min={adaptiveAlgo === "LMS" ? "1e-8" : "0.01"}
-                max={adaptiveAlgo === "LMS" ? "1" : "0.2"}
+                min={adaptiveAlgo === "LMS" ? "1e-6" : "0.01"}
+                max={adaptiveAlgo === "LMS" ? "0.1" : "0.2"}
                 step={adaptiveAlgo === "LMS" ? "0.0001" : "0.01"}
                 value={stepSize}
                 onChange={(e) => setStepSize(Number(e.target.value))}
                 onBlur={() => setStepSize((s) => {
                   const raw = Number(s);
                   if (adaptiveAlgo === "LMS") {
-                    const v = clamp(raw || 0.01, 1e-8, 1);
+                    const v = clamp(raw || 0.01, 1e-6, 0.1);
                     return v;
                   }
                   const v = clamp(raw || 0.01, 0.01, 0.2);

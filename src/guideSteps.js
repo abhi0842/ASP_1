@@ -2,7 +2,7 @@ export const guideSteps = [
   {
     title: "Welcome to the Lab",
     content:
-      "Would you like a guided tour of the Application and Usage of Filters on ECG Signal simulation?",
+      "Would you like a guided tour of the Application and Usage of Adaptive Filters on ECG Signal simulation?",
     type: "choice",
     targetId: "guideButton",
   },
@@ -39,7 +39,7 @@ export const guideSteps = [
   {
     title: "4. Select Algorithm",
     content:
-      "Pick an adaptive filter: NLMS (default), LMS, or RLS. Change the selection if you want to compare algorithms.",
+      "Pick an adaptive filter: LMS (default), RLS, or NLMS. Change the selection if you want to compare algorithms.",
     highlight: "algorithmSelector",
     preferredPlacement: "left",
     isDropdown: true,
@@ -47,7 +47,7 @@ export const guideSteps = [
   {
     title: "5. Filter Parameters",
     content:
-      "Set filter order (M). For NLMS or LMS, adjust step size μ. For RLS, set forgetting factor λ and regularization δ using the fields shown for your chosen algorithm.",
+      "Set filter order (M). For LMS or NLMS , adjust step size μ. For RLS, set forgetting factor λ and regularization δ using the fields shown for your chosen algorithm.",
     highlight: "algoSetup",
     preferredPlacement: "left",
   },
