@@ -31,6 +31,11 @@ export const SimulationProvider = ({ children }) => {
     mse: "0.000000",
   });
 
+  // Diagnostic data for educational features
+  const [diagnostics, setDiagnostics] = useState(null);
+  // Comparison data for LMS vs RLS
+  const [comparisonData, setComparisonData] = useState(null);
+
   // UI triggers (expected by components)
   const [generateECG, setGenerateECG] = useState(false);
   const [applyNoiseTrigger, setApplyNoiseTrigger] = useState(false);
@@ -137,6 +142,8 @@ export const SimulationProvider = ({ children }) => {
       setNoisySamples([]);
       setFilteredSamples([]);
       setCleanSignal([]);
+      setDiagnostics(null);
+      setComparisonData(null);
 
       const res = await fetch(csvFilePath);
       if (!res.ok) throw new Error(`Failed to load ECG CSV: ${res.status}`);
@@ -156,7 +163,7 @@ export const SimulationProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  }, [csvFilePath, parseCsvECG,]);
+  }, [csvFilePath, parseCsvECG, config.filterType, config.filterOrder]);
 
   useEffect(() => {
     if (!generateECG) return;
@@ -208,6 +215,12 @@ export const SimulationProvider = ({ children }) => {
         // metrics
         metrics,
         setMetrics,
+
+        // diagnostic data
+        diagnostics,
+        setDiagnostics,
+        comparisonData,
+        setComparisonData,
 
         // instruction UI controls
         showInstruction,

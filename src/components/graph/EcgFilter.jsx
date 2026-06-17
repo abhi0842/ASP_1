@@ -40,6 +40,7 @@ export const EcgFilter = () => {
     noisySamples,
     setFilteredSamples,
     setMetrics,
+    setDiagnostics,
   } = useContext(SimulationContext);
 
   const filteredData = useMemo(() => {
@@ -59,31 +60,83 @@ export const EcgFilter = () => {
     const noiseReference = noisyECG.map((v, i) => v - (cleanGroundTruth[i] || 0));
 
     let cleanedSignal = [];
-    if (config.filterType === "NLMS") {
-      cleanedSignal = filterSignalNLMS(noiseReference, noisyECG, {
-        filterOrder: config.filterOrder,
-        stepSize: config.stepSize,
-      });
+    let diagnosticsResult = null;
     
-    } else if (config.filterType === "LMS") {
-      cleanedSignal = filterSignalLMS(noiseReference, noisyECG, {
+    if (config.filterType === "NLMS") {
+      const result = filterSignalNLMS(noiseReference, noisyECG, {
         filterOrder: config.filterOrder,
         stepSize: config.stepSize,
-      }) ;}
-      else {
-      cleanedSignal = filterSignalRLS(noiseReference, noisyECG, {
+        returnDiagnostics: true,
+      });
+      cleanedSignal = result.Yfiltered;
+      diagnosticsResult = {
+        ...result.diagnostics,
+        algorithm: "NLMS",
+        yNoise: result.yNoise,
+        noisyECG,
+        cleanGroundTruth,
+      };
+    } else if (config.filterType === "LMS") {
+      const result = filterSignalLMS(noiseReference, noisyECG, {
+        filterOrder: config.filterOrder,
+        stepSize: config.stepSize,
+        returnDiagnostics: true,
+      });
+      cleanedSignal = result.Yfiltered;
+      diagnosticsResult = {
+        ...result.diagnostics,
+        algorithm: "LMS",
+        yNoise: result.yNoise,
+        noisyECG,
+        cleanGroundTruth,
+      };
+    } else {
+      const result = filterSignalRLS(noiseReference, noisyECG, {
         filterOrder: config.filterOrder,
         forgettingFactor: config.forgettingFactor,
         regularization: config.regularization,
+        returnDiagnostics: true,
       });
+      cleanedSignal = result.Yfiltered;
+      diagnosticsResult = {
+        ...result.diagnostics,
+        algorithm: "RLS",
+        yNoise: result.yNoise,
+        noisyECG,
+        cleanGroundTruth,
+      };
     }
+
+    // Compute error history and MSE for convergence curve
+    if (diagnosticsResult) {
+      const N = cleanedSignal.length;
+      const errorHistory = new Array(N);
+      const squaredErrorHistory = new Array(N);
+      const mseHistory = new Array(N);
+      let sumSq = 0;
+      
+      for (let n = 0; n < N; n++) {
+        const e = cleanedSignal[n] - cleanGroundTruth[n];
+        errorHistory[n] = e;
+        const sqErr = e * e;
+        squaredErrorHistory[n] = sqErr;
+        sumSq += sqErr;
+        mseHistory[n] = sumSq / (n + 1);
+      }
+      
+      diagnosticsResult.errorHistory = errorHistory;
+      diagnosticsResult.squaredErrorHistory = squaredErrorHistory;
+      diagnosticsResult.mseHistory = mseHistory;
+    }
+
+    setDiagnostics(diagnosticsResult);
 
     const mse = calculateMSE(cleanGroundTruth, cleanedSignal);
     setMetrics({ algorithm: config.filterType, order: config.filterOrder, mse: mse.toFixed(6) });
 
     const mapped = display.map((p, i) => ({ x: p.x, y: cleanedSignal[i] ?? 0 }));
     return mapped.filter((p) => p.x <= time);
-  }, [time, originalFs, config, cleanSignal, rawSamples, noisySamples, setMetrics]);
+  }, [time, originalFs, config, cleanSignal, rawSamples, noisySamples, setMetrics, setDiagnostics]);
 
   useEffect(() => {
     setFilteredSamples(filteredData);
