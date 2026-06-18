@@ -163,7 +163,7 @@ export const SimulationProvider = ({ children }) => {
     } catch (e) {
       console.error(e);
     }
-  }, [csvFilePath, parseCsvECG, config.filterType, config.filterOrder]);
+  }, [csvFilePath, parseCsvECG]);
 
   useEffect(() => {
     if (!generateECG) return;

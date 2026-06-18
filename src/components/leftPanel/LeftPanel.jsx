@@ -14,7 +14,7 @@ export const LeftPanel = () => {
   const { generateECG, applyNoiseTrigger, filteredECG, applypsdTrigger } =
     useContext(SimulationContext);
   
-  const [showEducationalFeatures, setShowEducationalFeatures] = useState(true);
+  const [showEducationalFeatures, setShowEducationalFeatures] = useState(false);
   
   return (
     <div className={styles.leftPanelContainer}>
@@ -36,7 +36,7 @@ export const LeftPanel = () => {
               alignItems: "center",
               marginBottom: "0.5rem"
             }}>
-              <h3 style={{ margin: 0, fontSize: "1.2rem" }}>Educational Features</h3>
+              <h3 style={{ margin: 0, fontSize: "1.2rem" }}>More Details</h3>
               <button
                 onClick={() => setShowEducationalFeatures(!showEducationalFeatures)}
                 style={{

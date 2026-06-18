@@ -194,31 +194,31 @@ export const LMSvsRLSComparison = () => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ backgroundColor: "#f5f5f5" }}>
-                  <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left" }}>Metric</th>
-                  <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left", color: "#e74c3c" }}>LMS</th>
-                  <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left", color: "#3498db" }}>RLS</th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left",color:"black" }}>Metric</th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left", color: "#110706" }}>LMS</th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left", color: "#050b0f" }}>RLS</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Final MSE</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.lms.finalMSE.toExponential(4)}</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.rls.finalMSE.toExponential(4)}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>Final MSE</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" , color: "black" }}>{comparisonData.lms.finalMSE.toExponential(4)}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black"  }}>{comparisonData.rls.finalMSE.toExponential(4)}</td>
                 </tr>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Convergence Iteration</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.lms.convergenceIter || "-"}</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.rls.convergenceIter || "-"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black"  }}>Convergence Iteration</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" , color: "black" }}>{comparisonData.lms.convergenceIter || "-"}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>{comparisonData.rls.convergenceIter || "-"}</td>
                 </tr>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Execution Time (ms)</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.lms.time.toFixed(2)}</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.rls.time.toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>Execution Time (ms)</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>{comparisonData.lms.time.toFixed(2)}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>{comparisonData.rls.time.toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Filter Order</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.filterOrder}</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{comparisonData.filterOrder}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" , color: "black" }}>Filter Order</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>{comparisonData.filterOrder}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px", color: "black" }}>{comparisonData.filterOrder}</td>
                 </tr>
               </tbody>
             </table>
